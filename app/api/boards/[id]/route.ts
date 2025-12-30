@@ -6,7 +6,7 @@ import { prisma } from '@/lib/prisma';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await auth();
@@ -15,8 +15,10 @@ export async function GET(
       return NextResponse.json({ error: '인증이 필요합니다.' }, { status: 401 });
     }
 
+    const { id } = await params;
+
     const board = await prisma.board.findUnique({
-      where: { id: params.id },
+      where: { id },
       include: {
         columns: {
           include: {

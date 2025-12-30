@@ -18,7 +18,7 @@ const updateCardSchema = z.object({
 // 카드 조회
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await auth();
@@ -27,8 +27,10 @@ export async function GET(
       return NextResponse.json({ error: '인증이 필요합니다.' }, { status: 401 });
     }
 
+    const { id } = await params;
+
     const card = await prisma.card.findUnique({
-      where: { id: params.id },
+      where: { id },
       include: {
         assignee: {
           select: {
@@ -89,7 +91,7 @@ export async function GET(
 // 카드 수정
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await auth();
@@ -98,12 +100,13 @@ export async function PATCH(
       return NextResponse.json({ error: '인증이 필요합니다.' }, { status: 401 });
     }
 
+    const { id } = await params;
     const body = await request.json();
     const data = updateCardSchema.parse(body);
 
     // 기존 카드 확인
     const existingCard = await prisma.card.findUnique({
-      where: { id: params.id },
+      where: { id },
       include: {
         column: {
           include: {
@@ -131,7 +134,7 @@ export async function PATCH(
 
     // 카드 업데이트
     const card = await prisma.card.update({
-      where: { id: params.id },
+      where: { id },
       data: {
         ...(data.title && { title: data.title }),
         ...(data.description !== undefined && { description: data.description }),
@@ -172,7 +175,7 @@ export async function PATCH(
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: error.errors[0].message },
+        { error: error.issues[0].message },
         { status: 400 }
       );
     }
@@ -188,7 +191,7 @@ export async function PATCH(
 // 카드 삭제
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await auth();
@@ -197,9 +200,11 @@ export async function DELETE(
       return NextResponse.json({ error: '인증이 필요합니다.' }, { status: 401 });
     }
 
+    const { id } = await params;
+
     // 권한 확인
     const card = await prisma.card.findUnique({
-      where: { id: params.id },
+      where: { id },
       include: {
         column: {
           include: {
@@ -227,7 +232,7 @@ export async function DELETE(
 
     // 카드 삭제
     await prisma.card.delete({
-      where: { id: params.id },
+      where: { id },
     });
 
     return NextResponse.json({ message: '카드가 삭제되었습니다.' });

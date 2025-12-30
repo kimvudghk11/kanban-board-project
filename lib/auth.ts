@@ -19,14 +19,14 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
                 }
 
                 const user = await prisma.user.findUnique({
-                    where: { email: credentials.email },
+                    where: { email: credentials.email as string },
                 });
 
                 if (!user) {
                     throw new Error('등록되지 않은 이메일입니다.');
                 }
 
-                const isPasswordValid = await compare(credentials.password, user.password);
+                const isPasswordValid = await compare(credentials.password as string, user.password);
 
                 if (!isPasswordValid) {
                     throw new Error('비밀번호가 일치하지 않습니다.');
@@ -77,14 +77,14 @@ export const authOptions = {
                 }
 
                 const user = await prisma.user.findUnique({
-                    where: { email: credentials.email },
+                    where: { email: credentials.email as string },
                 });
 
                 if (!user) {
                     throw new Error('등록되지 않은 이메일입니다.');
                 }
 
-                const isPasswordValid = await compare(credentials.password, user.password);
+                const isPasswordValid = await compare(credentials.password as string, user.password);
 
                 if (!isPasswordValid) {
                     throw new Error('비밀번호가 일치하지 않습니다.');
@@ -120,4 +120,3 @@ export const authOptions = {
     },
     secret: process.env.NEXTAUTH_SECRET,
 };
-
