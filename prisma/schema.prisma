@@ -1,0 +1,102 @@
+// Prisma Schema for Kanban Board
+// 팀 협업을 위한 실시간 칸반 보드
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// 사용자 모델
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  password  String
+  boards    BoardMember[]
+  cards     Card[]    @relation("AssignedCards")
+  comments  Comment[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([email])
+}
+
+// 보드 모델 (프로젝트/워크스페이스)
+model Board {
+  id          String        @id @default(cuid())
+  title       String
+  description String?       @db.Text
+  columns     Column[]
+  members     BoardMember[]
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  @@index([createdAt])
+}
+
+// 보드 멤버 (보드와 사용자 간의 다대다 관계)
+model BoardMember {
+  id      String @id @default(cuid())
+  board   Board  @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  boardId String
+  user    User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId  String
+  role    String @default("member") // admin, member
+
+  @@unique([boardId, userId])
+  @@index([boardId])
+  @@index([userId])
+}
+
+// 컬럼 모델 (To Do, In Progress, Done 등)
+model Column {
+  id        String   @id @default(cuid())
+  title     String
+  position  Int
+  board     Board    @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  boardId   String
+  cards     Card[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([boardId, position])
+}
+
+// 카드 모델 (이슈/태스크)
+model Card {
+  id          String    @id @default(cuid())
+  title       String
+  description String?   @db.Text
+  position    Int
+  priority    String?   @default("medium") // low, medium, high
+  dueDate     DateTime?
+  column      Column    @relation(fields: [columnId], references: [id], onDelete: Cascade)
+  columnId    String
+  assignee    User?     @relation("AssignedCards", fields: [assigneeId], references: [id])
+  assigneeId  String?
+  comments    Comment[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([columnId, position])
+  @@index([assigneeId])
+}
+
+// 댓글 모델
+model Comment {
+  id        String   @id @default(cuid())
+  content   String   @db.Text
+  card      Card     @relation(fields: [cardId], references: [id], onDelete: Cascade)
+  cardId    String
+  author    User     @relation(fields: [authorId], references: [id])
+  authorId  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([cardId])
+  @@index([authorId])
+}
