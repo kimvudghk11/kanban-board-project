@@ -17,32 +17,49 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     setMounted(true);
+    // 저장된 테마 불러오기
     const savedTheme = (localStorage.getItem('theme') as Theme) || 'light';
     setTheme(savedTheme);
-    applyTheme(savedTheme);
-  }, []);
 
-  const applyTheme = (newTheme: Theme) => {
-    const root = document.documentElement;
-    
-    // data-theme 속성 설정
-    root.setAttribute('data-theme', newTheme);
-    
-    // dark 클래스 추가/제거
-    if (newTheme === 'dark') {
-      root.classList.add('dark');
+    // DOM에 즉시 적용
+    if (savedTheme === 'dark') {
+      document.documentElement.classList.add('dark');
     } else {
-      root.classList.remove('dark');
+      document.documentElement.classList.remove('dark');
     }
-  };
+
+    console.log('💡 Initial theme loaded:', savedTheme);
+  }, []);
 
   const toggleTheme = () => {
     const newTheme = theme === 'light' ? 'dark' : 'light';
+
+    console.log(`🎨 Theme toggling: ${theme} → ${newTheme}`);
+
+    // 상태 업데이트
     setTheme(newTheme);
     localStorage.setItem('theme', newTheme);
-    applyTheme(newTheme);
+
+    // DOM 즉시 업데이트
+    const html = document.documentElement;
+    if (newTheme === 'dark') {
+      html.classList.add('dark');
+    } else {
+      html.classList.remove('dark');
+    }
+
+    // 강제 리페인트
+    void html.offsetHeight;
+
+    console.log('✅ Theme applied:', newTheme);
+    console.log('✅ HTML classes:', html.className);
+    console.log('✅ Body computed style:', {
+      bg: window.getComputedStyle(document.body).backgroundColor,
+      color: window.getComputedStyle(document.body).color
+    });
   };
 
+  // 마운트 전에는 children만 렌더링 (hydration 이슈 방지)
   if (!mounted) {
     return <>{children}</>;
   }

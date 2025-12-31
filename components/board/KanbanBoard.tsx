@@ -36,8 +36,15 @@ export function KanbanBoard({
   const [board, setBoard] = useState(initialBoard);
   const [activeCard, setActiveCard] = useState<Card | null>(null);
 
-  // 외부에서 보드 데이터가 업데이트되면 내부 상태도 업데이트
+  // props가 변경될 때마다 로컬 상태 업데이트
   useEffect(() => {
+    console.log('=== Board Updated ===');
+    console.log('Columns:', initialBoard.columns.map(c => ({
+      id: c.id,
+      title: c.title,
+      cardCount: c.cards.length,
+      cards: c.cards.map(card => ({ id: card.id, title: card.title, columnId: card.columnId }))
+    })));
     setBoard(initialBoard);
   }, [initialBoard]);
 
@@ -73,6 +80,10 @@ export function KanbanBoard({
     const card = board.columns
       .flatMap((col) => col.cards)
       .find((c) => String(c.id) === String(active.id));
+    
+    console.log('=== Drag Start ===');
+    console.log('Active Card:', card ? { id: card.id, title: card.title, columnId: card.columnId } : null);
+    
     setActiveCard(card || null);
   };
 
@@ -96,18 +107,23 @@ export function KanbanBoard({
 
     if (String(activeColumn.id) !== String(overColumn.id)) {
       setBoard((prev) => {
-        const activeCards = [...activeColumn.cards];
-        const overCards = [...overColumn.cards];
+        const newColumns = prev.columns.map(col => ({
+          ...col,
+          cards: [...col.cards]
+        }));
+
+        const activeColIndex = newColumns.findIndex(c => String(c.id) === String(activeColumn.id));
+        const overColIndex = newColumns.findIndex(c => String(c.id) === String(overColumn.id));
+
+        const activeCards = newColumns[activeColIndex].cards;
+        const overCards = newColumns[overColIndex].cards;
 
         const activeIndex = activeCards.findIndex((card) => String(card.id) === activeId);
         const overIndex = overId === String(overColumn.id)
           ? overCards.length
           : overCards.findIndex((card) => String(card.id) === overId);
 
-        // 카드를 제거하고 복사
         const [movedCard] = activeCards.splice(activeIndex, 1);
-        
-        // 카드를 새 컬럼에 추가 (모든 속성을 유지)
         const updatedCard = {
           ...movedCard,
           columnId: overColumn.id,
@@ -116,15 +132,7 @@ export function KanbanBoard({
 
         return {
           ...prev,
-          columns: prev.columns.map((col) => {
-            if (String(col.id) === String(activeColumn.id)) {
-              return { ...col, cards: activeCards };
-            }
-            if (String(col.id) === String(overColumn.id)) {
-              return { ...col, cards: overCards };
-            }
-            return col;
-          }),
+          columns: newColumns,
         };
       });
     }
@@ -132,6 +140,11 @@ export function KanbanBoard({
 
   const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event;
+    
+    console.log('=== Drag End ===');
+    console.log('Active ID:', active.id);
+    console.log('Over ID:', over?.id);
+    
     setActiveCard(null);
 
     if (!over) return;
@@ -149,45 +162,38 @@ export function KanbanBoard({
       (col) => String(col.id) === overId || col.cards.some((card) => String(card.id) === overId)
     );
 
-    if (!activeColumn || !overColumn) return;
+    if (!activeColumn || !overColumn) {
+      console.error('Column not found!');
+      return;
+    }
 
     const card = activeColumn.cards.find((c) => String(c.id) === activeId);
-    if (!card) return;
+    if (!card) {
+      console.error('Card not found!');
+      return;
+    }
 
-    // 같은 컬럼 내에서 이동
-    if (String(activeColumn.id) === String(overColumn.id)) {
-      const oldIndex = activeColumn.cards.findIndex((card) => String(card.id) === activeId);
-      const newIndex = activeColumn.cards.findIndex((card) => String(card.id) === overId);
+    console.log('Moving card:', {
+      cardId: card.id,
+      title: card.title,
+      from: activeColumn.title,
+      to: overColumn.title,
+      fromColumnId: activeColumn.id,
+      toColumnId: overColumn.id,
+    });
 
-      if (oldIndex !== -1 && newIndex !== -1 && oldIndex !== newIndex) {
-        const newCards = arrayMove(activeColumn.cards, oldIndex, newIndex);
-
-        setBoard((prev) => ({
-          ...prev,
-          columns: prev.columns.map((col) =>
-            String(col.id) === String(activeColumn.id) ? { ...col, cards: newCards } : col
-          ),
-        }));
-
-        try {
-          await onCardUpdate(activeId, {
-            columnId: card.columnId,
-            position: newIndex,
-          });
-        } catch (error) {
-          console.error('Failed to update card:', error);
-        }
-      }
-    } else {
-      // 다른 컬럼으로 이동 - 서버에 업데이트
-      try {
-        await onCardUpdate(activeId, {
-          columnId: overColumn.id,
-          position: 0, // 새 컬럼의 맨 위로
-        });
-      } catch (error) {
-        console.error('Failed to update card:', error);
-      }
+    try {
+      // 서버에 업데이트
+      await onCardUpdate(activeId, {
+        columnId: overColumn.id,
+        position: 0,
+      });
+      
+      console.log('✅ Card update successful!');
+    } catch (error) {
+      console.error('❌ Card update failed:', error);
+      // 실패하면 원래 상태로 복구
+      setBoard(initialBoard);
     }
   };
 
@@ -199,7 +205,7 @@ export function KanbanBoard({
       onDragOver={handleDragOver}
       onDragEnd={handleDragEnd}
     >
-      <div className="flex gap-6 overflow-x-auto pb-4 custom-scrollbar-horizontal">
+      <div className="flex gap-6 overflow-x-auto pb-4">
         {filteredBoard.columns.map((column) => (
           <KanbanColumn
             key={column.id}
@@ -217,22 +223,6 @@ export function KanbanBoard({
           </div>
         ) : null}
       </DragOverlay>
-
-      <style jsx>{`
-        .custom-scrollbar-horizontal::-webkit-scrollbar {
-          height: 8px;
-        }
-        .custom-scrollbar-horizontal::-webkit-scrollbar-track {
-          background: #f1f5f9;
-        }
-        .custom-scrollbar-horizontal::-webkit-scrollbar-thumb {
-          background: #cbd5e1;
-          border-radius: 4px;
-        }
-        .custom-scrollbar-horizontal::-webkit-scrollbar-thumb:hover {
-          background: #94a3b8;
-        }
-      `}</style>
     </DndContext>
   );
 }

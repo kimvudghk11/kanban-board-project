@@ -114,24 +114,39 @@ export default function BoardDetailPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-blue-600 dark:border-purple-600"></div>
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 dark:from-gray-900 dark:via-slate-900 dark:to-gray-900 flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <div className="relative">
+            <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full blur-lg opacity-50"></div>
+            <div className="relative animate-spin rounded-full h-16 w-16 border-4 border-transparent border-t-blue-600 border-r-purple-600"></div>
+          </div>
+          <p className="text-gray-600 dark:text-gray-400 font-medium">보드 로딩 중...</p>
+        </div>
       </div>
     );
   }
 
   if (!board) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 dark:from-gray-900 dark:via-slate-900 dark:to-gray-900 flex items-center justify-center">
         <div className="text-center">
-          <div className="text-6xl mb-4">😢</div>
-          <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-2">
+          <div className="relative inline-block mb-6">
+            <div className="absolute inset-0 bg-gradient-to-r from-red-500 to-orange-600 rounded-full blur-2xl opacity-20"></div>
+            <div className="relative text-7xl">😢</div>
+          </div>
+          <h2 className="text-3xl font-bold text-gray-800 dark:text-gray-100 mb-3">
             보드를 찾을 수 없습니다
           </h2>
+          <p className="text-gray-600 dark:text-gray-400 mb-8">
+            삭제되었거나 접근 권한이 없는 보드입니다
+          </p>
           <Link
             href="/boards"
-            className="text-blue-600 dark:text-purple-400 hover:underline font-semibold"
+            className="inline-flex items-center gap-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white px-8 py-4 rounded-xl hover:from-blue-700 hover:to-purple-700 transition-all shadow-lg hover:shadow-xl font-semibold transform hover:scale-105 active:scale-95"
           >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
             보드 목록으로 돌아가기
           </Link>
         </div>
@@ -154,23 +169,34 @@ export default function BoardDetailPage() {
         onSave={handleNewCard}
       />
 
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors no-select">
-        <nav className="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700 sticky top-0 z-40 transition-colors">
-          <div className="container mx-auto px-4 py-4">
-            <div className="flex items-center justify-between">
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 dark:from-gray-900 dark:via-slate-900 dark:to-gray-900 transition-colors no-select">
+        {/* 네비게이션 */}
+        <nav className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-lg shadow-sm border-b border-gray-200 dark:border-gray-700 sticky top-0 z-50 transition-colors">
+          <div className="container mx-auto px-6 py-4">
+            <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-4">
                 <Link
                   href="/boards"
-                  className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 transition"
+                  className="group p-2 text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-purple-400 transition-all hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl"
+                  title="보드 목록으로"
                 >
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-6 h-6 transform group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                   </svg>
                 </Link>
+                <div className="border-l border-gray-300 dark:border-gray-600 h-8"></div>
                 <div>
-                  <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100">{board.title}</h1>
+                  <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100 flex items-center gap-2">
+                    {board.title}
+                    <span className="inline-flex items-center gap-1 text-xs font-medium text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded-full">
+                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                      </svg>
+                      {board.members.length}
+                    </span>
+                  </h1>
                   {board.description && (
-                    <p className="text-sm text-gray-600 dark:text-gray-400">{board.description}</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{board.description}</p>
                   )}
                 </div>
               </div>
@@ -182,34 +208,42 @@ export default function BoardDetailPage() {
               )}
             </div>
 
-            <div className="mt-4">
-              <div className="relative max-w-md">
-                <input
-                  type="text"
-                  placeholder="카드 검색..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full px-4 py-2 pl-10 border-2 border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-purple-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 transition"
-                />
-                <svg
-                  className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
+            {/* 검색 바 */}
+            <div className="relative max-w-md">
+              <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                 </svg>
               </div>
+              <input
+                type="text"
+                placeholder="카드 검색... (제목, 설명, 담당자)"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-12 pr-4 py-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-purple-500 focus:border-transparent bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-gray-100 transition-all placeholder:text-gray-400"
+              />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery('')}
+                  className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              )}
             </div>
           </div>
         </nav>
 
+        {/* 칸반 보드 */}
         <div className="container mx-auto p-6">
           <KanbanBoard
             board={board}
             onCardClick={handleCardClick}
             onAddCard={handleAddCard}
             onCardUpdate={handleCardUpdate}
+            onUpdateBoard={fetchBoard}
             searchQuery={searchQuery}
           />
         </div>

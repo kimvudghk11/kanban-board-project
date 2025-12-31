@@ -7,12 +7,12 @@ import { z } from 'zod';
 
 const updateCardSchema = z.object({
   title: z.string().min(1).optional(),
-  description: z.string().optional(),
+  description: z.string().optional().nullable(),
   priority: z.enum(['low', 'medium', 'high']).optional(),
   dueDate: z.string().optional().nullable(),
   assigneeId: z.string().optional().nullable(),
   columnId: z.string().optional(),
-  position: z.number().optional(),
+  position: z.number().int().min(0).optional(),
 });
 
 // 카드 조회
@@ -102,6 +102,11 @@ export async function PATCH(
 
     const { id } = await params;
     const body = await request.json();
+    
+    console.log('=== PATCH Card Request ===');
+    console.log('Card ID:', id);
+    console.log('Request Body:', JSON.stringify(body, null, 2));
+    
     const data = updateCardSchema.parse(body);
 
     // 기존 카드 확인
@@ -132,20 +137,45 @@ export async function PATCH(
       return NextResponse.json({ error: '권한이 없습니다.' }, { status: 403 });
     }
 
+    // 업데이트할 데이터 준비 (명시적으로)
+    const updateData: {
+      title?: string;
+      description?: string | null;
+      priority?: string;
+      dueDate?: Date | null;
+      assigneeId?: string | null;
+      columnId?: string;
+      position?: number;
+    } = {};
+    
+    if (data.title !== undefined) {
+      updateData.title = data.title;
+    }
+    if (data.description !== undefined) {
+      updateData.description = data.description;
+    }
+    if (data.priority !== undefined) {
+      updateData.priority = data.priority;
+    }
+    if (data.dueDate !== undefined) {
+      updateData.dueDate = data.dueDate ? new Date(data.dueDate) : null;
+    }
+    if (data.assigneeId !== undefined) {
+      updateData.assigneeId = data.assigneeId;
+    }
+    if (data.columnId !== undefined) {
+      updateData.columnId = data.columnId;
+    }
+    if (data.position !== undefined) {
+      updateData.position = data.position;
+    }
+
+    console.log('Update Data:', JSON.stringify(updateData, null, 2));
+
     // 카드 업데이트
     const card = await prisma.card.update({
       where: { id },
-      data: {
-        ...(data.title && { title: data.title }),
-        ...(data.description !== undefined && { description: data.description }),
-        ...(data.priority && { priority: data.priority }),
-        ...(data.dueDate !== undefined && {
-          dueDate: data.dueDate ? new Date(data.dueDate) : null,
-        }),
-        ...(data.assigneeId !== undefined && { assigneeId: data.assigneeId }),
-        ...(data.columnId && { columnId: data.columnId }),
-        ...(data.position !== undefined && { position: data.position }),
-      },
+      data: updateData,
       include: {
         assignee: {
           select: {
@@ -170,6 +200,8 @@ export async function PATCH(
         },
       },
     });
+
+    console.log('Updated Card:', JSON.stringify({ id: card.id, columnId: card.columnId, position: card.position }, null, 2));
 
     return NextResponse.json({ card });
   } catch (error) {
@@ -202,8 +234,8 @@ export async function DELETE(
 
     const { id } = await params;
 
-    // 권한 확인
-    const card = await prisma.card.findUnique({
+    // 기존 카드 확인
+    const existingCard = await prisma.card.findUnique({
       where: { id },
       include: {
         column: {
@@ -222,11 +254,11 @@ export async function DELETE(
       },
     });
 
-    if (!card) {
+    if (!existingCard) {
       return NextResponse.json({ error: '카드를 찾을 수 없습니다.' }, { status: 404 });
     }
 
-    if (card.column.board.members.length === 0) {
+    if (existingCard.column.board.members.length === 0) {
       return NextResponse.json({ error: '권한이 없습니다.' }, { status: 403 });
     }
 
@@ -244,4 +276,3 @@ export async function DELETE(
     );
   }
 }
-
