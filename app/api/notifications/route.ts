@@ -29,6 +29,10 @@ export async function GET(request: NextRequest) {
         isRead: false,
       },
     });
+    
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/042dcbad-baee-4776-a418-4939725e5107',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'app/api/notifications/route.ts:32',message:'Notifications fetched',data:{userId:session.user.id,count:notifications.length,unreadCount},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H7'})}).catch(()=>{});
+    // #endregion
 
     return NextResponse.json({ notifications, unreadCount });
   } catch (error) {

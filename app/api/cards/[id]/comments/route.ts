@@ -24,6 +24,10 @@ export async function POST(
 
     const { id: cardId } = await params;
     const body = await request.json();
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/042dcbad-baee-4776-a418-4939725e5107',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'app/api/cards/[id]/comments/route.ts:26',message:'Comment creation request',data:{cardId,contentLength:body.content?.length},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H3'})}).catch(()=>{});
+    // #endregion
+    
     const { content } = createCommentSchema.parse(body);
 
     // 카드 존재 및 권한 확인
@@ -72,6 +76,10 @@ export async function POST(
       },
     });
 
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/042dcbad-baee-4776-a418-4939725e5107',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'app/api/cards/[id]/comments/route.ts:74',message:'Comment created',data:{commentId:comment.id,cardId},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H3'})}).catch(()=>{});
+    // #endregion
+    
     // 활동 로그 기록
     const message = getActivityMessage('COMMENT_ADDED', session.user.name || '사용자');
     await createActivity({
