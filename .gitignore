@@ -29,10 +29,11 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-# env files (do not commit)
+# env files (do not commit .env, but keep .env.example)
 .env
 .env*.local
 .env.production
+!.env.example
 
 # vercel
 .vercel
@@ -41,10 +42,9 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# prisma
+# prisma (exclude database files)
 /prisma/*.db
 /prisma/*.db-journal
-/prisma/migrations
 
 # IDE
 .vscode/
