@@ -8,6 +8,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { CommentSection } from './CommentSection';
 import { LabelBadge } from './LabelBadge';
 import { ChecklistSection } from './ChecklistSection';
+import { LabelSelector } from './LabelSelector';
 
 interface Comment {
   id: string;
@@ -58,14 +59,18 @@ interface CardDetailModalProps {
 
 export function CardDetailModal({ card, isOpen, onClose, onEdit, onDelete, onRefresh, currentUserId, boardId }: CardDetailModalProps) {
   const [comments, setComments] = useState<Comment[]>([]);
+  const [checklistItems, setChecklistItems] = useState<ChecklistItem[]>([]);
   const [deleting, setDeleting] = useState(false);
+  const [isAddingComment, setIsAddingComment] = useState(false);
 
-  // 카드가 변경될 때마다 댓글 동기화
+  // 모달이 열릴 때 초기 데이터 로드
   useEffect(() => {
-    if (card && card.comments) {
-      setComments(card.comments);
+    if (isOpen && card) {
+      setComments(card.comments || []);
+      setChecklistItems(card.checklistItems || []);
+      setIsAddingComment(false);
     }
-  }, [card]);
+  }, [isOpen, card?.id]); // 모달 열릴 때 & 카드 변경 시
 
   // 모달이 열릴 때 body 스크롤 막기
   useEffect(() => {
@@ -82,11 +87,8 @@ export function CardDetailModal({ card, isOpen, onClose, onEdit, onDelete, onRef
   if (!isOpen || !card) return null;
 
   const handleAddComment = async (content: string) => {
+    setIsAddingComment(true);
     try {
-      console.log('=== Adding Comment ===');
-      console.log('Card ID:', card.id);
-      console.log('Content:', content);
-      
       const response = await fetch(`/api/cards/${card.id}/comments`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -95,27 +97,31 @@ export function CardDetailModal({ card, isOpen, onClose, onEdit, onDelete, onRef
 
       if (!response.ok) {
         const errorData = await response.json();
-        console.error('Comment API Error:', errorData);
         throw new Error(errorData.error || 'Failed to add comment');
       }
 
       const { comment } = await response.json();
-      console.log('✅ Comment created:', comment);
       
-      // 로컬 상태 업데이트
-      setComments([comment, ...comments]);
+      // 로컬 상태에 새 댓글 즉시 추가
+      setComments(prevComments => [comment, ...prevComments]);
       
-      // 보드 전체 새로고침으로 데이터 동기화
+      // 활동 로그 업데이트를 위해 보드 새로고침 (백그라운드)
       if (onRefresh) {
-        await onRefresh();
+        onRefresh().finally(() => {
+          setIsAddingComment(false);
+        });
+      } else {
+        setIsAddingComment(false);
       }
     } catch (error) {
+      setIsAddingComment(false);
       console.error('Failed to add comment:', error);
       throw error;
     }
   };
 
   const handleDeleteComment = async (commentId: string) => {
+    setIsAddingComment(true);
     try {
       const response = await fetch(`/api/cards/${card.id}/comments?commentId=${commentId}`, {
         method: 'DELETE',
@@ -123,20 +129,26 @@ export function CardDetailModal({ card, isOpen, onClose, onEdit, onDelete, onRef
 
       if (!response.ok) throw new Error('Failed to delete comment');
 
-      // 로컬 상태 업데이트
-      setComments(comments.filter(c => c.id !== commentId));
+      // 로컬 상태에서 댓글 즉시 제거
+      setComments(prevComments => prevComments.filter(c => c.id !== commentId));
       
-      // 보드 새로고침
+      // 보드 새로고침 (백그라운드)
       if (onRefresh) {
-        await onRefresh();
+        onRefresh().finally(() => {
+          setIsAddingComment(false);
+        });
+      } else {
+        setIsAddingComment(false);
       }
     } catch (error) {
+      setIsAddingComment(false);
       console.error('Failed to delete comment:', error);
       throw error;
     }
   };
 
   const handleUpdateComment = async (commentId: string, content: string) => {
+    setIsAddingComment(true);
     try {
       const response = await fetch(`/api/cards/${card.id}/comments`, {
         method: 'PATCH',
@@ -148,14 +160,19 @@ export function CardDetailModal({ card, isOpen, onClose, onEdit, onDelete, onRef
 
       const { comment } = await response.json();
       
-      // 로컬 상태 업데이트
-      setComments(comments.map(c => c.id === commentId ? comment : c));
+      // 로컬 상태에서 댓글 즉시 업데이트
+      setComments(prevComments => prevComments.map(c => c.id === commentId ? comment : c));
       
-      // 보드 새로고침
+      // 보드 새로고침 (백그라운드)
       if (onRefresh) {
-        await onRefresh();
+        onRefresh().finally(() => {
+          setIsAddingComment(false);
+        });
+      } else {
+        setIsAddingComment(false);
       }
     } catch (error) {
+      setIsAddingComment(false);
       console.error('Failed to update comment:', error);
       throw error;
     }
@@ -307,25 +324,8 @@ export function CardDetailModal({ card, isOpen, onClose, onEdit, onDelete, onRef
             )}
           </div>
 
-          {/* 라벨 표시만 (수정은 Edit 모달에서) */}
-          {card.labels && card.labels.length > 0 && (
-            <div className="bg-gray-50 dark:bg-gray-700/50 rounded-xl p-5 border border-gray-200 dark:border-gray-600">
-              <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400 mb-3">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
-                </svg>
-                <span className="font-bold">라벨</span>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                {card.labels.map(({ id, label }) => (
-                  <LabelBadge key={id} name={label.name} color={label.color} size="md" />
-                ))}
-              </div>
-            </div>
-          )}
-
           {/* 체크리스트 섹션 */}
-          <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
+          <div className="bg-gray-50 dark:bg-gray-700/50 rounded-xl p-5 border border-gray-200 dark:border-gray-600">
             <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3 flex items-center gap-2">
               <svg className="w-5 h-5 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
@@ -334,12 +334,32 @@ export function CardDetailModal({ card, isOpen, onClose, onEdit, onDelete, onRef
             </h4>
             <ChecklistSection
               cardId={card.id}
-              items={card.checklistItems || []}
+              items={checklistItems}
               onRefresh={async () => {
                 if (onRefresh) await onRefresh();
               }}
             />
           </div>
+
+          {/* 라벨 섹션 (체크리스트 아래로 이동) */}
+          {boardId && (
+            <div className="bg-gray-50 dark:bg-gray-700/50 rounded-xl p-5 border border-gray-200 dark:border-gray-600">
+              <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400 mb-3">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                </svg>
+                <span className="font-bold">라벨</span>
+              </div>
+              <LabelSelector
+                cardId={card.id}
+                boardId={boardId}
+                selectedLabels={card.labels || []}
+                onUpdate={async () => {
+                  if (onRefresh) await onRefresh();
+                }}
+              />
+            </div>
+          )}
 
           {/* 댓글 섹션 */}
           {currentUserId && (

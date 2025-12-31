@@ -41,6 +41,20 @@ export async function GET(
                     order: 'asc',
                   },
                 },
+                comments: {
+                  include: {
+                    author: {
+                      select: {
+                        id: true,
+                        name: true,
+                        email: true,
+                      },
+                    },
+                  },
+                  orderBy: {
+                    createdAt: 'desc',
+                  },
+                },
               },
               orderBy: {
                 position: 'asc',

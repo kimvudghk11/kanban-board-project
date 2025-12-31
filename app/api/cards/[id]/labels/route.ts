@@ -50,6 +50,10 @@ export async function POST(
 
     const body = await request.json();
     const { labelId } = cardLabelSchema.parse(body);
+    
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/042dcbad-baee-4776-a418-4939725e5107',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'app/api/cards/[id]/labels/route.ts:52',message:'Label add request',data:{cardId:card.id,labelId},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H4'})}).catch(()=>{});
+    // #endregion
 
     // 중복 체크
     const existing = await prisma.cardLabel.findUnique({
@@ -78,6 +82,10 @@ export async function POST(
       },
     });
 
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/042dcbad-baee-4776-a418-4939725e5107',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'app/api/cards/[id]/labels/route.ts:80',message:'Label added',data:{cardLabelId:cardLabel.id,labelName:cardLabel.label.name},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H4'})}).catch(()=>{});
+    // #endregion
+    
     // 활동 로그 기록
     const message = getActivityMessage('LABEL_ADDED', session.user.name || '사용자', { labelName: cardLabel.label.name });
     await createActivity({

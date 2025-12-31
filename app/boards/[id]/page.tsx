@@ -55,6 +55,17 @@ export default function BoardDetailPage() {
       }
       const data = await response.json();
       setBoard(data.board);
+      
+      // 선택된 카드가 있으면 업데이트된 데이터로 갱신
+      if (selectedCard) {
+        const updatedCard = data.board.columns
+          .flatMap((col: any) => col.cards)
+          .find((card: any) => card.id === selectedCard.id);
+        if (updatedCard) {
+          setSelectedCard(updatedCard);
+        }
+      }
+      
       // 활동 로그 갱신 트리거
       setActivityRefreshTrigger(prev => prev + 1);
     } catch (error) {

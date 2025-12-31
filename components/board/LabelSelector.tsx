@@ -13,7 +13,7 @@ interface LabelSelectorProps {
   cardId: string;
   boardId: string;
   selectedLabels: Array<{ id: string; label: Label }>;
-  onUpdate: () => void;
+  onUpdate: () => void | Promise<void>;
 }
 
 export function LabelSelector({ cardId, boardId, selectedLabels, onUpdate }: LabelSelectorProps) {
@@ -58,7 +58,7 @@ export function LabelSelector({ cardId, boardId, selectedLabels, onUpdate }: Lab
 
       // 라벨 목록 갱신하여 방금 추가한 라벨이 목록에서 사라지도록
       await fetchAvailableLabels();
-      onUpdate();
+      await Promise.resolve(onUpdate());
     } catch (error) {
       console.error('Error adding label:', error);
       alert('라벨 추가에 실패했습니다.');
@@ -77,7 +77,7 @@ export function LabelSelector({ cardId, boardId, selectedLabels, onUpdate }: Lab
       if (isOpen) {
         await fetchAvailableLabels();
       }
-      onUpdate();
+      await Promise.resolve(onUpdate());
     } catch (error) {
       console.error('Error removing label:', error);
       alert('라벨 제거에 실패했습니다.');
