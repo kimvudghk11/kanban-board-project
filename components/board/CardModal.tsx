@@ -5,22 +5,40 @@ import { Card } from '@prisma/client';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import { formatDistanceToNow } from 'date-fns';
+import { CommentSection } from './CommentSection';
+
+interface Comment {
+  id: string;
+  content: string;
+  author: {
+    id: string;
+    name: string | null;
+    email: string;
+  };
+  createdAt: Date;
+}
+
+interface CardWithComments extends Card {
+  comments?: Comment[];
+}
 
 interface CardModalProps {
-  card: Card | null;
+  card: CardWithComments | null;
   isOpen: boolean;
   onClose: () => void;
   onUpdate: (cardId: string, data: Partial<Card>) => Promise<void>;
   onDelete?: (cardId: string) => Promise<void>;
+  currentUserId?: string;
 }
 
-export function CardModal({ card, isOpen, onClose, onUpdate, onDelete }: CardModalProps) {
+export function CardModal({ card, isOpen, onClose, onUpdate, onDelete, currentUserId }: CardModalProps) {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [priority, setPriority] = useState<'low' | 'medium' | 'high'>('medium');
   const [dueDate, setDueDate] = useState('');
   const [loading, setLoading] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [comments, setComments] = useState<Comment[]>([]);
 
   useEffect(() => {
     if (card) {
@@ -28,11 +46,13 @@ export function CardModal({ card, isOpen, onClose, onUpdate, onDelete }: CardMod
       setDescription(card.description || '');
       setPriority((card.priority as 'low' | 'medium' | 'high') || 'medium');
       setDueDate(card.dueDate ? format(new Date(card.dueDate), 'yyyy-MM-dd') : '');
+      setComments(card.comments || []);
     } else {
       setTitle('');
       setDescription('');
       setPriority('medium');
       setDueDate('');
+      setComments([]);
     }
   }, [card]);
 
@@ -87,8 +107,28 @@ export function CardModal({ card, isOpen, onClose, onUpdate, onDelete }: CardMod
     }
   };
 
+  const handleAddComment = async (content: string) => {
+    if (!card) return;
+
+    try {
+      const response = await fetch(`/api/cards/${card.id}/comments`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content }),
+      });
+
+      if (!response.ok) throw new Error('Failed to add comment');
+
+      const { comment } = await response.json();
+      setComments([comment, ...comments]);
+    } catch (error) {
+      console.error('Failed to add comment:', error);
+      throw error;
+    }
+  };
+
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 overflow-y-auto animate-fadeIn">
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[100] p-4 overflow-y-auto animate-fadeIn">
       <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl w-full max-w-2xl border border-gray-200 dark:border-gray-700 animate-scaleIn my-8 overflow-hidden">
         {/* 상단 컬러 바 */}
         <div className="h-2 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500"></div>
@@ -210,8 +250,20 @@ export function CardModal({ card, isOpen, onClose, onUpdate, onDelete }: CardMod
             </div>
           </div>
 
+          {/* 댓글 섹션 */}
+          {currentUserId && (
+            <div className="pt-6 border-t border-gray-200 dark:border-gray-700">
+              <CommentSection
+                cardId={card.id}
+                comments={comments}
+                onAddComment={handleAddComment}
+                currentUserId={currentUserId}
+              />
+            </div>
+          )}
+
           {/* 버튼 */}
-          <div className="flex flex-col sm:flex-row gap-3 pt-6 border-t border-gray-200 dark:border-gray-700">
+          <div className="flex flex-col sm:flex-row gap-3 pt-6 border-t border-gray-200 dark:border-gray-700 mt-6">
             {onDelete && (
               <button
                 type="button"

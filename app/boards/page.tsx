@@ -207,15 +207,6 @@ export default function BoardsPage() {
                       </div>
                     </div>
                   </div>
-
-                  {/* 호버 시 보이는 화살표 */}
-                  <div className="absolute bottom-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <div className="p-2 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg text-white">
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                      </svg>
-                    </div>
-                  </div>
                 </Link>
               ))}
             </div>

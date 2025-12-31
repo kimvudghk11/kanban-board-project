@@ -1,237 +1,284 @@
-# 🎯 팀 협업을 위한 실시간 칸반 보드
+# 🚀 팀 협업 칸반 보드 (Team Kanban Board)
 
-Next.js 기반의 실시간 협업 칸반 보드 애플리케이션입니다.
+> **Next.js 16 + TypeScript + SQLite** 기반의 실시간 협업 칸반 보드 애플리케이션
+
+[![Next.js](https://img.shields.io/badge/Next.js-16.1-black?logo=next.js)](https://nextjs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.x-blue?logo=typescript)](https://www.typescriptlang.org/)
+[![Prisma](https://img.shields.io/badge/Prisma-5.22-2D3748?logo=prisma)](https://www.prisma.io/)
+[![TailwindCSS](https://img.shields.io/badge/TailwindCSS-3.4-38B2AC?logo=tailwind-css)](https://tailwindcss.com/)
+
+---
 
 ## ✨ 주요 기능
 
-### 🔐 인증 시스템
-- **회원가입 & 로그인**: NextAuth.js v5를 사용한 안전한 인증
-- **비밀번호 암호화**: bcryptjs를 사용한 해시 처리
-- **세션 관리**: 서버 및 클라이언트 세션 관리
+### 🎯 핵심 기능
+- ✅ **드래그 & 드롭** - 직관적인 카드 이동 (@dnd-kit)
+- ✅ **실시간 협업** - Socket.io 기반 실시간 동기화
+- ✅ **팀 관리** - 멤버 초대 및 역할 관리 (Admin/Member)
+- ✅ **다크 모드** - 라이트/다크 테마 지원
 
-### 📋 보드 관리
-- **다중 보드**: 여러 프로젝트 보드 생성 및 관리
-- **보드 정보**: 제목, 설명, 멤버 수, 카드 수 표시
-- **실시간 동기화**: Socket.io를 통한 팀원 간 실시간 업데이트
+### 📋 카드 관리
+- ✅ **카드 라벨/태그** - 색상별 라벨로 카드 분류
+- ✅ **체크리스트** - 카드별 세부 작업 관리 (진행률 표시)
+- ✅ **댓글 시스템** - 실시간 댓글 추가/수정/삭제
+- ✅ **담당자 지정** - 카드별 담당자 할당
+- ✅ **우선순위** - Low/Medium/High 우선순위 설정
+- ✅ **마감일** - 마감일 설정 및 알림
 
-### 🎴 카드 시스템
-- **드래그 앤 드롭**: @dnd-kit을 사용한 직관적인 카드 이동
-- **카드 생성 시 모든 정보 입력**: 제목, 설명, 우선순위, 마감일을 한 번에 설정
-- **카드 속성**:
-  - 제목 및 설명
-  - 우선순위 (낮음/보통/높음)
-  - 마감일 설정
-  - 담당자 할당
-- **카드 필터링**: 제목 및 설명 기반 실시간 검색
-- **위치 저장**: 카드를 이동하면 데이터베이스에 영구 저장
+### 🔔 알림 & 활동
+- ✅ **활동 로그** - 모든 팀 활동 실시간 추적
+- ✅ **마감일 알림** - 지연/다가오는 마감일 자동 표시
+- ✅ **알림 시스템** - 카드 할당, 댓글, 초대 알림
 
-### 🎨 UI/UX
-- **다크 모드**: 라이트/다크 테마 즉시 전환 (CSS 변수 기반)
-- **반응형 디자인**: 모바일, 태블릿, 데스크톱 지원
-- **프로필 드롭다운**: 
-  - 사용자 정보 표시
-  - 설정 메뉴
-  - 테마 전환 (즉시 반영)
-  - 로그아웃
-- **부드러운 애니메이션**: 200ms transition으로 모든 색상 변경
-- **드래그 방지**: 텍스트 선택 및 이미지 드래그 방지
-- **깔끔한 카드 디자인**: 
-  - 명확한 border로 영역 구분
-  - 적절한 hover 효과
-  - 컬럼 제목과 겹치지 않는 간격
+### ⚙️ 커스터마이징
+- ✅ **커스텀 컬럼** - 워크플로우에 맞게 컬럼 추가/수정/삭제
+- ✅ **라벨 관리** - 보드별 커스텀 라벨 생성
+- ✅ **검색 & 필터** - 우선순위, 담당자별 필터링
 
-### 🔍 검색 기능
-- 카드 제목 및 설명 기반 실시간 검색
-- 검색 결과 즉시 반영
+---
 
-### 💬 댓글 시스템
-- 카드별 댓글 작성 및 관리
-- 댓글 작성자 정보 표시
-- 작성 시간 표시
+## 🎬 데모 스크린샷
+
+### 메인 보드
+![Kanban Board](https://via.placeholder.com/800x400?text=Kanban+Board+Demo)
+
+### 카드 상세
+![Card Detail](https://via.placeholder.com/800x400?text=Card+Detail+Modal)
+
+---
+
+## 🚀 빠른 시작 (5분 설치)
+
+### 📋 사전 요구사항
+- Node.js 18.x 이상
+- npm 9.x 이상
+
+### 1️⃣ 프로젝트 클론
+```bash
+git clone <repository-url>
+cd kanban-board-project
+```
+
+### 2️⃣ 자동 설치 (권장) - 한 번에!
+```bash
+npm run setup
+```
+
+이 명령어는 다음을 자동으로 실행합니다:
+1. 의존성 설치 (`npm install`)
+2. **환경 변수 파일 생성** (`.env` 자동 생성)
+3. Prisma Client 생성 (`npx prisma generate`)
+4. 데이터베이스 생성 (`npx prisma db push`)
+5. 샘플 데이터 추가 (`npm run prisma:seed`)
+
+> **참고**: `.env` 파일이 자동으로 생성됩니다! 수동 생성 불필요!
+
+### 3️⃣ 개발 서버 실행
+```bash
+npm run dev
+```
+
+브라우저에서 `http://localhost:3000` 접속!
+
+---
+
+## ⚠️ 중요: 처음 설치 시
+
+개발 서버가 실행 중이면 **반드시 종료**하고 설치하세요:
+```bash
+# Ctrl + C로 서버 종료 후
+npm run setup
+```
+
+---
+
+## 🧪 테스트 계정
+
+샘플 데이터가 포함된 테스트 계정:
+
+| 이메일 | 비밀번호 | 역할 |
+|--------|----------|------|
+| `admin@kanban.com` | `password123` | 관리자 |
+| `dev@kanban.com` | `password123` | 개발자 |
+| `designer@kanban.com` | `password123` | 디자이너 |
+
+---
+
+## 📁 프로젝트 구조
+
+```
+kanban-board-project/
+├── app/                      # Next.js App Router
+│   ├── api/                  # API Routes
+│   │   ├── auth/             # 인증 (NextAuth)
+│   │   ├── boards/           # 보드 관리
+│   │   ├── cards/            # 카드 관리
+│   │   └── notifications/    # 알림
+│   ├── boards/               # 보드 페이지
+│   ├── login/                # 로그인 페이지
+│   ├── register/             # 회원가입 페이지
+│   └── layout.tsx            # 루트 레이아웃
+├── components/               # React 컴포넌트
+│   ├── board/                # 보드 관련 컴포넌트
+│   └── ui/                   # UI 컴포넌트
+├── contexts/                 # React Context
+│   └── ThemeContext.tsx      # 테마 관리
+├── lib/                      # 유틸리티
+│   ├── auth.ts               # NextAuth 설정
+│   ├── prisma.ts             # Prisma Client
+│   └── activity.ts           # 활동 로그 헬퍼
+├── prisma/                   # Prisma 설정
+│   ├── schema.prisma         # 데이터베이스 스키마
+│   ├── seed.ts               # 샘플 데이터
+│   └── dev.db                # SQLite 데이터베이스 (자동 생성)
+├── types/                    # TypeScript 타입
+├── server.js                 # Socket.io 서버
+└── package.json
+```
+
+---
 
 ## 🛠️ 기술 스택
 
 ### Frontend
 - **Framework**: Next.js 16 (App Router)
 - **Language**: TypeScript
-- **Styling**: TailwindCSS v4 (CSS 변수 기반)
-- **Drag & Drop**: @dnd-kit/core, @dnd-kit/sortable
-- **Authentication**: NextAuth.js v5
-- **Real-time**: Socket.io-client
-- **Forms**: React Hook Form
-- **Validation**: Zod
-- **Date**: date-fns
+- **Styling**: TailwindCSS 3.4
+- **Drag & Drop**: @dnd-kit
+- **State Management**: React Context API
+- **Date Handling**: date-fns
 
 ### Backend
-- **Runtime**: Node.js
-- **Database**: MySQL/MariaDB
-- **ORM**: Prisma
+- **API**: Next.js API Routes
+- **Database**: SQLite (개발), Prisma ORM
 - **Authentication**: NextAuth.js v5
-- **Password Hash**: bcryptjs
 - **Real-time**: Socket.io
-- **Custom Server**: Express-like setup
+- **Validation**: Zod
 
-## 📦 설치 및 실행
+---
 
-### 1. 저장소 클론
+## 📊 데이터베이스
+
+### SQLite 사용 이유
+- ✅ **간편한 설치**: 별도 DB 서버 불필요
+- ✅ **이식성**: 프로젝트 폴더에 `.db` 파일로 포함
+- ✅ **빠른 테스트**: 즉시 실행 가능
+- ✅ **제로 설정**: 복잡한 설정 없음
+
+### Prisma Studio로 데이터 확인
 ```bash
-git clone <repository-url>
-cd kanban-board-project
+npx prisma studio
 ```
+브라우저에서 `http://localhost:5555` 접속!
 
-### 2. 의존성 설치
+### 데이터베이스 초기화
 ```bash
-npm install
+# 데이터베이스 재생성
+npx prisma db push --force-reset
+
+# 샘플 데이터 추가
+npm run prisma:seed
 ```
 
-### 3. 환경 변수 설정
-`.env` 파일을 생성하고 다음 내용을 입력하세요:
+---
 
-```env
-# 데이터베이스 연결 URL
-DATABASE_URL="mysql://USER:PASSWORD@localhost:3306/kanban_board"
+## 🎨 주요 컴포넌트
 
-# NextAuth.js 비밀 키
-NEXTAUTH_SECRET="your-secret-here"
+### KanbanBoard
+드래그 & 드롭 기능을 포함한 메인 보드 컴포넌트
 
-# NextAuth.js URL (로컬 개발)
-NEXTAUTH_URL="http://localhost:3000"
+### CardDetailModal
+카드 상세 정보 조회 (읽기 전용)
+- 체크리스트
+- 댓글
+- 라벨
+- 활동 로그
 
-# Socket.io 서버 URL
-NEXT_PUBLIC_SOCKET_URL="http://localhost:3000"
-```
+### CardEditModal
+카드 수정 모달
+- 제목/설명 수정
+- 담당자 지정
+- 우선순위/마감일 설정
+- 라벨 추가/제거
 
-**NEXTAUTH_SECRET 생성:**
+### ActivityFeed
+실시간 활동 로그 피드 (10초 자동 갱신)
+
+### DueDateReminder
+마감일 알림 위젯
+- 지연된 카드
+- 3일 이내 마감 카드
+
+---
+
+## 🔧 개발 명령어
+
 ```bash
-openssl rand -base64 32
-```
-
-### 4. 데이터베이스 설정
-```sql
-CREATE DATABASE kanban_board;
-```
-
-Prisma 마이그레이션:
-```bash
-npx prisma migrate dev
-npx prisma generate
-```
-
-### 5. 개발 서버 실행
-```bash
+# 개발 서버 실행
 npm run dev
-```
 
-브라우저에서 `http://localhost:3000` 접속
-
-### 6. 프로덕션 빌드
-```bash
+# 프로덕션 빌드
 npm run build
+
+# 프로덕션 서버 실행
 npm start
+
+# Prisma Client 재생성
+npm run prisma:generate
+
+# 데이터베이스 스키마 적용
+npm run prisma:push
+
+# 샘플 데이터 추가
+npm run prisma:seed
+
+# 전체 설정 (설치 + DB + 샘플 데이터)
+npm run setup
 ```
 
-## 🎯 최근 개선 사항 (완료)
+---
 
-### UI/UX 개선
-- ✅ **완벽한 다크모드**: CSS 변수 기반으로 모든 UI 요소가 즉시 반응
-- ✅ **부드러운 전환**: 200ms transition으로 색상 변경 시 부드러운 효과
-- ✅ **프로필 드롭다운**: 사용자 친화적인 메뉴
-- ✅ **카드 hover 효과**: 적절한 높이 조정 (0.5rem)
-- ✅ **카드 border**: 명확한 영역 구분
-- ✅ **간격 조정**: 컬럼 제목과 카드가 겹치지 않도록 여백 추가
+## 🚢 배포
 
-### 기능 개선
-- ✅ **카드 위치 저장**: 드래그 앤 드롭 시 데이터베이스에 영구 저장
-- ✅ **디버깅 로그**: 모든 카드 이동 추적 가능
-- ✅ **새 카드 생성**: 우선순위와 마감일을 생성 시 설정
-- ✅ **카드 모달**: "마지막 업데이트" 상대 시간 표시
-- ✅ **실시간 검색**: 카드 필터링 기능
+### Vercel 배포 (권장)
+1. Vercel에 프로젝트 연결
+2. 환경 변수 설정:
+   ```
+   DATABASE_URL="file:./prisma/dev.db"
+   NEXTAUTH_SECRET="your-production-secret"
+   NEXTAUTH_URL="https://your-domain.com"
+   ```
+3. 배포!
 
-## 🐛 버그 수정
+### 주의사항
+- **SQLite는 개발/테스트용입니다**
+- 프로덕션에서는 **PostgreSQL** 또는 **MySQL** 사용 권장
+- 데이터베이스 변경 시 `prisma/schema.prisma`의 `provider`만 수정
 
-### 해결된 주요 버그
-- ✅ **카드 위치 버그**: 새로고침 시 원래 위치로 돌아가는 문제 해결
-- ✅ **다크모드 버그**: CSS 변수와 Tailwind v4 호환성 문제 해결
-- ✅ **Hydration 오류**: suppressHydrationWarning 적용
-- ✅ **드래그 앤 드롭**: 컬럼 간 이동 시 columnId 저장 문제 해결
+---
 
-## 🔧 디버깅
+## 🐛 문제 해결
 
-### 콘솔 로그
-개발 중 다음 로그를 확인할 수 있습니다:
-
-```javascript
-// 테마 전환
-🎨 Theme changing: light → dark
-
-// 카드 이동
-=== Drag End ===
-Moving card: {
-  cardId: "...",
-  title: "카드 제목",
-  from: "To Do",
-  to: "In Progress"
-}
-
-// API 요청
-=== PATCH Card Request ===
-Card ID: ...
-Request Body: { columnId: "...", position: 0 }
-✅ Card update successful!
+### "dev.db 파일이 생성되지 않아요"
+```bash
+npx prisma generate
+npx prisma db push --force-reset
 ```
 
-## 📊 데이터베이스 스키마
+### "EPERM 에러"
+개발 서버를 종료하고 다시 시도하세요 (Ctrl + C)
 
-```prisma
-model User {
-  id        String   @id @default(cuid())
-  name      String?
-  email     String   @unique
-  password  String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
+### "로그인이 안 돼요"
+`.env` 파일의 `NEXTAUTH_SECRET`이 설정되어 있는지 확인하세요.
 
-model Board {
-  id          String   @id @default(cuid())
-  title       String
-  description String?
-  ownerId     String
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-}
-
-model Column {
-  id       String @id @default(cuid())
-  title    String
-  position Int
-  boardId  String
-}
-
-model Card {
-  id          String    @id @default(cuid())
-  title       String
-  description String?
-  priority    String?
-  dueDate     DateTime?
-  position    Int
-  columnId    String
-  assigneeId  String?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-}
+### "카드가 To Do로 돌아가요"
+브라우저 콘솔에서 에러를 확인하고, 데이터베이스를 초기화해보세요:
+```bash
+npx prisma db push --force-reset
+npm run prisma:seed
 ```
 
-## 🚀 향후 개선 계획
-
-- [ ] 보드 멤버 초대 시스템
-- [ ] 카드 라벨/태그 기능
-- [ ] 활동 로그 (Activity Log)
-- [ ] 파일 첨부 기능
-- [ ] 알림 시스템
-- [ ] 보드 템플릿
-- [ ] 단위 테스트
-- [ ] E2E 테스트
+---
 
 ## 📝 라이선스
 
@@ -239,4 +286,16 @@ MIT License
 
 ---
 
-**Made with ❤️ for team collaboration**
+## 👥 기여
+
+이슈와 PR은 언제나 환영합니다!
+
+---
+
+## 📞 문의
+
+문제가 발생하면 GitHub Issues를 통해 문의해주세요.
+
+---
+
+**즐거운 칸반 보드 경험 되세요!** 🎊

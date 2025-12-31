@@ -6,21 +6,22 @@ generator client {
 }
 
 datasource db {
-  provider = "mysql"
+  provider = "sqlite"
   url      = env("DATABASE_URL")
 }
 
 // 사용자 모델
 model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  name      String?
-  password  String
-  boards    BoardMember[]
-  cards     Card[]    @relation("AssignedCards")
-  comments  Comment[]
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id            String         @id @default(cuid())
+  email         String         @unique
+  name          String?
+  password      String
+  boards        BoardMember[]
+  cards         Card[]         @relation("AssignedCards")
+  comments      Comment[]
+  notifications Notification[]
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
 
   @@index([email])
 }
@@ -29,9 +30,10 @@ model User {
 model Board {
   id          String        @id @default(cuid())
   title       String
-  description String?       @db.Text
+  description String?
   columns     Column[]
   members     BoardMember[]
+  labels      Label[]
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
 
@@ -68,19 +70,21 @@ model Column {
 
 // 카드 모델 (이슈/태스크)
 model Card {
-  id          String    @id @default(cuid())
-  title       String
-  description String?   @db.Text
-  position    Int
-  priority    String?   @default("medium") // low, medium, high
-  dueDate     DateTime?
-  column      Column    @relation(fields: [columnId], references: [id], onDelete: Cascade)
-  columnId    String
-  assignee    User?     @relation("AssignedCards", fields: [assigneeId], references: [id])
-  assigneeId  String?
-  comments    Comment[]
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  id             String          @id @default(cuid())
+  title          String
+  description    String?
+  position       Int
+  priority       String?         @default("medium") // low, medium, high
+  dueDate        DateTime?
+  column         Column          @relation(fields: [columnId], references: [id], onDelete: Cascade)
+  columnId       String
+  assignee       User?           @relation("AssignedCards", fields: [assigneeId], references: [id])
+  assigneeId     String?
+  comments       Comment[]
+  labels         CardLabel[]
+  checklistItems ChecklistItem[]
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
 
   @@index([columnId, position])
   @@index([assigneeId])
@@ -89,7 +93,7 @@ model Card {
 // 댓글 모델
 model Comment {
   id        String   @id @default(cuid())
-  content   String   @db.Text
+  content   String
   card      Card     @relation(fields: [cardId], references: [id], onDelete: Cascade)
   cardId    String
   author    User     @relation(fields: [authorId], references: [id])
@@ -99,4 +103,81 @@ model Comment {
 
   @@index([cardId])
   @@index([authorId])
+}
+
+// 알림 모델
+model Notification {
+  id        String   @id @default(cuid())
+  type      String   // BOARD_INVITE, CARD_ASSIGNED, COMMENT, etc.
+  title     String
+  message   String
+  isRead    Boolean  @default(false)
+  data      String?  // 추가 데이터 (JSON 문자열)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId, isRead])
+  @@index([createdAt])
+}
+
+// 활동 로그 모델
+model Activity {
+  id        String   @id @default(cuid())
+  type      String   // CARD_CREATED, CARD_MOVED, CARD_UPDATED, COMMENT_ADDED, etc.
+  message   String
+  boardId   String
+  cardId    String?
+  userId    String
+  userName  String?
+  userEmail String
+  data      String?  // 추가 상세 정보 (JSON 문자열)
+  createdAt DateTime @default(now())
+
+  @@index([boardId, createdAt])
+  @@index([cardId])
+}
+
+// 체크리스트 아이템 모델
+model ChecklistItem {
+  id          String   @id @default(cuid())
+  cardId      String
+  content     String
+  isCompleted Boolean  @default(false)
+  order       Int
+  card        Card     @relation(fields: [cardId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([cardId])
+  @@index([cardId, order])
+}
+
+// 라벨 모델
+model Label {
+  id        String      @id @default(cuid())
+  name      String
+  color     String      // 색상 코드 (예: blue, green, red, yellow, purple, pink, gray, orange)
+  board     Board       @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  boardId   String
+  cards     CardLabel[]
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+
+  @@unique([boardId, name])
+  @@index([boardId])
+}
+
+// 카드-라벨 관계 (다대다)
+model CardLabel {
+  id      String @id @default(cuid())
+  card    Card   @relation(fields: [cardId], references: [id], onDelete: Cascade)
+  cardId  String
+  label   Label  @relation(fields: [labelId], references: [id], onDelete: Cascade)
+  labelId String
+
+  @@unique([cardId, labelId])
+  @@index([cardId])
+  @@index([labelId])
 }

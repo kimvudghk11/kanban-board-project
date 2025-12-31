@@ -36,7 +36,7 @@ export function KanbanColumn({ column, onCardClick, onAddCard }: KanbanColumnPro
   const bgColor = columnBgColors[column.title as keyof typeof columnBgColors] || 'bg-gray-50/80 dark:bg-gray-800/50';
 
   return (
-    <div className={`${bgColor} backdrop-blur-sm rounded-2xl p-5 w-80 flex flex-col shadow-xl border border-gray-200/50 dark:border-gray-700/50 transition-all hover:shadow-2xl no-select`}>
+    <div className={`${bgColor} backdrop-blur-sm rounded-2xl p-5 w-96 flex flex-col shadow-xl border border-gray-200/50 dark:border-gray-700/50 transition-all hover:shadow-2xl no-select`}>
       {/* 컬럼 헤더 */}
       <div className="mb-6 pb-2">
         {/* 컬러 바 */}

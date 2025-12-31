@@ -24,6 +24,9 @@ interface KanbanBoardProps {
   onAddCard: (columnId: string) => void;
   onCardUpdate: (cardId: string, updates: Partial<Card>) => Promise<void>;
   searchQuery?: string;
+  filterPriority?: string;
+  filterAssignee?: string;
+  currentUserId?: string;
 }
 
 export function KanbanBoard({
@@ -32,6 +35,9 @@ export function KanbanBoard({
   onAddCard,
   onCardUpdate,
   searchQuery = '',
+  filterPriority = 'all',
+  filterAssignee = 'all',
+  currentUserId = '',
 }: KanbanBoardProps) {
   const [board, setBoard] = useState(initialBoard);
   const [activeCard, setActiveCard] = useState<Card | null>(null);
@@ -56,24 +62,38 @@ export function KanbanBoard({
     })
   );
 
-  // 검색 필터링
+  // 검색 및 필터링
   const filteredBoard = useMemo(() => {
-    if (!searchQuery.trim()) {
-      return board;
-    }
-
     const lowerQuery = searchQuery.toLowerCase();
+    
     return {
       ...board,
       columns: board.columns.map(column => ({
         ...column,
-        cards: column.cards.filter(card =>
-          card.title.toLowerCase().includes(lowerQuery) ||
-          card.description?.toLowerCase().includes(lowerQuery)
-        ),
+        cards: column.cards.filter(card => {
+          // 검색 필터
+          const matchesSearch = !searchQuery.trim() || 
+            card.title.toLowerCase().includes(lowerQuery) ||
+            card.description?.toLowerCase().includes(lowerQuery);
+
+          // 우선순위 필터
+          const matchesPriority = filterPriority === 'all' || card.priority === filterPriority;
+
+          // 담당자 필터
+          let matchesAssignee = true;
+          if (filterAssignee === 'me') {
+            matchesAssignee = card.assigneeId === currentUserId;
+          } else if (filterAssignee === 'unassigned') {
+            matchesAssignee = !card.assigneeId;
+          } else if (filterAssignee !== 'all') {
+            matchesAssignee = card.assigneeId === filterAssignee;
+          }
+
+          return matchesSearch && matchesPriority && matchesAssignee;
+        }),
       })),
     };
-  }, [board, searchQuery]);
+  }, [board, searchQuery, filterPriority, filterAssignee, currentUserId]);
 
   const handleDragStart = (event: DragStartEvent) => {
     const { active } = event;

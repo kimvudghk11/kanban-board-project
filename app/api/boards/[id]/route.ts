@@ -31,6 +31,16 @@ export async function GET(
                     email: true,
                   },
                 },
+                labels: {
+                  include: {
+                    label: true,
+                  },
+                },
+                checklistItems: {
+                  orderBy: {
+                    order: 'asc',
+                  },
+                },
               },
               orderBy: {
                 position: 'asc',
@@ -52,6 +62,7 @@ export async function GET(
             },
           },
         },
+        labels: true,
       },
     });
 

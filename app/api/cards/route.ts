@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
+import { createActivity, getActivityMessage } from '@/lib/activity';
 
 const createCardSchema = z.object({
   title: z.string().min(1, '카드 제목을 입력해주세요.'),
@@ -45,6 +46,11 @@ export async function POST(request: NextRequest) {
         assigneeId: data.assigneeId,
       },
       include: {
+        column: {
+          select: {
+            boardId: true,
+          },
+        },
         assignee: {
           select: {
             id: true,
@@ -67,6 +73,18 @@ export async function POST(request: NextRequest) {
           },
         },
       },
+    });
+
+    // 활동 로그 기록
+    const message = getActivityMessage('CARD_CREATED', session.user.name || '사용자', { cardTitle: card.title });
+    await createActivity({
+      type: 'CARD_CREATED',
+      message,
+      boardId: card.column.boardId,
+      cardId: card.id,
+      userId: session.user.id,
+      userName: session.user.name,
+      userEmail: session.user.email || '',
     });
 
     return NextResponse.json({ card }, { status: 201 });

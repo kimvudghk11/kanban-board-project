@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
+import { createActivity, getActivityMessage } from '@/lib/activity';
 
 const updateCardSchema = z.object({
   title: z.string().min(1).optional(),
@@ -203,6 +204,41 @@ export async function PATCH(
 
     console.log('Updated Card:', JSON.stringify({ id: card.id, columnId: card.columnId, position: card.position }, null, 2));
 
+    // 활동 로그 기록 (컬럼 이동인 경우)
+    if (data.columnId && data.columnId !== existingCard.columnId) {
+      const oldColumn = await prisma.column.findUnique({ where: { id: existingCard.columnId } });
+      const newColumn = await prisma.column.findUnique({ where: { id: data.columnId } });
+      
+      if (oldColumn && newColumn) {
+        const message = getActivityMessage('CARD_MOVED', session.user.name || '사용자', {
+          cardTitle: card.title,
+          fromColumn: oldColumn.title,
+          toColumn: newColumn.title,
+        });
+        await createActivity({
+          type: 'CARD_MOVED',
+          message,
+          boardId: existingCard.column.boardId,
+          cardId: card.id,
+          userId: session.user.id,
+          userName: session.user.name,
+          userEmail: session.user.email || '',
+        });
+      }
+    } else if (Object.keys(updateData).length > 0 && !data.position) {
+      // 일반 수정 (위치 변경 제외)
+      const message = getActivityMessage('CARD_UPDATED', session.user.name || '사용자', { cardTitle: card.title });
+      await createActivity({
+        type: 'CARD_UPDATED',
+        message,
+        boardId: existingCard.column.boardId,
+        cardId: card.id,
+        userId: session.user.id,
+        userName: session.user.name,
+        userEmail: session.user.email || '',
+      });
+    }
+
     return NextResponse.json({ card });
   } catch (error) {
     if (error instanceof z.ZodError) {
@@ -265,6 +301,17 @@ export async function DELETE(
     // 카드 삭제
     await prisma.card.delete({
       where: { id },
+    });
+
+    // 활동 로그 기록
+    const message = getActivityMessage('CARD_DELETED', session.user.name || '사용자', { cardTitle: existingCard.title });
+    await createActivity({
+      type: 'CARD_DELETED',
+      message,
+      boardId: existingCard.column.boardId,
+      userId: session.user.id,
+      userName: session.user.name,
+      userEmail: session.user.email || '',
     });
 
     return NextResponse.json({ message: '카드가 삭제되었습니다.' });

@@ -5,10 +5,19 @@ import { CSS } from '@dnd-kit/utilities';
 import { Card } from '@prisma/client';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
+import { LabelBadge } from './LabelBadge';
 
 interface KanbanCardProps {
   card: Card & {
     assignee: { id: string; name: string | null; email: string } | null;
+    labels?: Array<{
+      id: string;
+      label: {
+        id: string;
+        name: string;
+        color: string;
+      };
+    }>;
   };
   onClick: () => void;
 }
@@ -76,9 +85,23 @@ export function KanbanCard({ card, onClick }: KanbanCardProps) {
 
       {/* 카드 설명 */}
       {card.description && (
-        <p className="text-sm text-gray-600 dark:text-gray-400 mb-4 line-clamp-2 leading-relaxed">
+        <p className="text-sm text-gray-600 dark:text-gray-400 mb-3 line-clamp-2 leading-relaxed">
           {card.description}
         </p>
+      )}
+
+      {/* 라벨 */}
+      {card.labels && card.labels.length > 0 && (
+        <div className="flex flex-wrap gap-1 mb-3">
+          {card.labels.slice(0, 3).map(({ id, label }) => (
+            <LabelBadge key={id} name={label.name} color={label.color} size="sm" />
+          ))}
+          {card.labels.length > 3 && (
+            <span className="text-xs text-gray-500 dark:text-gray-400 font-medium px-2 py-0.5">
+              +{card.labels.length - 3}
+            </span>
+          )}
+        </div>
       )}
 
       {/* 카드 푸터 */}

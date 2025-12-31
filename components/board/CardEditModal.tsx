@@ -1,6 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { Card } from '@prisma/client';
+import { format } from 'date-fns';
+import { LabelSelector } from './LabelSelector';
 
 interface BoardMember {
   userId: string;
@@ -11,26 +14,48 @@ interface BoardMember {
   };
 }
 
-interface NewCardModalProps {
+interface CardEditModalProps {
+  card: (Card & {
+    labels?: Array<{
+      id: string;
+      label: {
+        id: string;
+        name: string;
+        color: string;
+      };
+    }>;
+  }) | null;
   isOpen: boolean;
   onClose: () => void;
-  onSave: (data: { 
-    title: string; 
-    description: string; 
-    priority?: 'low' | 'medium' | 'high';
-    dueDate?: string;
-    assigneeId?: string;
-  }) => Promise<void>;
+  onUpdate: (cardId: string, data: Partial<Card>) => Promise<void>;
   boardMembers?: BoardMember[];
+  boardId?: string;
+  onRefresh?: () => void;
 }
 
-export function NewCardModal({ isOpen, onClose, onSave, boardMembers = [] }: NewCardModalProps) {
+export function CardEditModal({ card, isOpen, onClose, onUpdate, boardMembers = [], boardId, onRefresh }: CardEditModalProps) {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [priority, setPriority] = useState<'low' | 'medium' | 'high'>('medium');
   const [dueDate, setDueDate] = useState('');
   const [assigneeId, setAssigneeId] = useState<string>('');
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (card) {
+      setTitle(card.title || '');
+      setDescription(card.description || '');
+      setPriority((card.priority as 'low' | 'medium' | 'high') || 'medium');
+      setDueDate(card.dueDate ? format(new Date(card.dueDate), 'yyyy-MM-dd') : '');
+      setAssigneeId(card.assigneeId || '');
+    } else {
+      setTitle('');
+      setDescription('');
+      setPriority('medium');
+      setDueDate('');
+      setAssigneeId('');
+    }
+  }, [card]);
 
   // 모달이 열릴 때 body 스크롤 막기
   useEffect(() => {
@@ -44,69 +69,53 @@ export function NewCardModal({ isOpen, onClose, onSave, boardMembers = [] }: New
     };
   }, [isOpen]);
 
-  if (!isOpen) return null;
+  if (!isOpen || !card) return null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
     try {
-      await onSave({ 
-        title, 
+      await onUpdate(card.id, {
+        title,
         description,
         priority,
-        dueDate: dueDate || undefined,
-        assigneeId: assigneeId || undefined,
+        dueDate: dueDate ? new Date(dueDate) : null,
+        assigneeId: assigneeId || null,
       });
-      setTitle('');
-      setDescription('');
-      setPriority('medium');
-      setDueDate('');
-      setAssigneeId('');
       onClose();
     } catch (error) {
-      console.error('Failed to create card:', error);
-      alert('카드 생성에 실패했습니다.');
+      console.error('Failed to update card:', error);
+      alert('카드 수정에 실패했습니다.');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleClose = () => {
-    if (!loading) {
-      setTitle('');
-      setDescription('');
-      setPriority('medium');
-      setDueDate('');
-      setAssigneeId('');
-      onClose();
-    }
-  };
-
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[100] p-4 animate-fadeIn no-select">
-      <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl w-full max-w-lg border border-gray-200 dark:border-gray-700 animate-scaleIn overflow-hidden no-select" onMouseDown={(e) => e.stopPropagation()}>
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[100] p-4 overflow-y-auto animate-fadeIn no-select">
+      <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl w-full max-w-2xl border border-gray-200 dark:border-gray-700 animate-scaleIn my-8 overflow-hidden no-select" onMouseDown={(e) => e.stopPropagation()}>
         {/* 상단 컬러 바 */}
-        <div className="h-2 bg-gradient-to-r from-green-500 via-blue-500 to-purple-500"></div>
-        
+        <div className="h-2 bg-gradient-to-r from-orange-500 via-red-500 to-pink-500"></div>
+
         {/* 헤더 */}
-        <div className="flex items-center justify-between p-8 pb-6">
-          <div className="flex items-center gap-4">
-            <div className="relative">
-              <div className="absolute inset-0 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl blur opacity-50"></div>
-              <div className="relative w-14 h-14 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-xl">
+        <div className="flex items-start justify-between p-8 pb-6">
+          <div className="flex items-start gap-4">
+            <div className="relative flex-shrink-0">
+              <div className="absolute inset-0 bg-gradient-to-br from-orange-500 to-red-600 rounded-2xl blur opacity-50"></div>
+              <div className="relative w-14 h-14 bg-gradient-to-br from-orange-500 to-red-600 rounded-2xl flex items-center justify-center shadow-xl">
                 <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                 </svg>
               </div>
             </div>
             <div>
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">새 카드</h2>
-              <p className="text-sm text-gray-500 dark:text-gray-400">새로운 작업 카드를 만들어보세요</p>
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">카드 수정</h2>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">카드 정보를 수정하세요</p>
             </div>
           </div>
           <button
-            onClick={handleClose}
+            onClick={onClose}
             disabled={loading}
             className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl disabled:opacity-50"
           >
@@ -131,8 +140,8 @@ export function NewCardModal({ isOpen, onClose, onSave, boardMembers = [] }: New
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              className="w-full px-4 py-3.5 border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-purple-500 focus:border-transparent bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-gray-100 transition-all font-medium placeholder:text-gray-400"
-              placeholder="예: 새로운 기능 개발"
+              className="w-full px-4 py-3.5 border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 dark:focus:ring-red-500 focus:border-transparent bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-gray-100 transition-all font-medium placeholder:text-gray-400"
+              placeholder="예: 새 기능 개발"
               required
               disabled={loading}
               autoFocus
@@ -151,15 +160,15 @@ export function NewCardModal({ isOpen, onClose, onSave, boardMembers = [] }: New
               id="description"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              className="w-full px-4 py-3.5 border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-purple-500 focus:border-transparent bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-gray-100 transition-all resize-none placeholder:text-gray-400"
+              className="w-full px-4 py-3.5 border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 dark:focus:ring-red-500 focus:border-transparent bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-gray-100 transition-all resize-none placeholder:text-gray-400"
+              rows={5}
               placeholder="카드에 대한 상세한 설명을 입력하세요"
-              rows={4}
               disabled={loading}
             />
           </div>
 
           {/* 우선순위, 마감일, 담당자 */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
               <label htmlFor="priority" className="block text-sm font-bold text-gray-700 dark:text-gray-300 flex items-center gap-2">
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -171,7 +180,7 @@ export function NewCardModal({ isOpen, onClose, onSave, boardMembers = [] }: New
                 id="priority"
                 value={priority}
                 onChange={(e) => setPriority(e.target.value as 'low' | 'medium' | 'high')}
-                className="w-full px-4 py-3.5 border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-purple-500 focus:border-transparent bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-gray-100 transition-all font-medium"
+                className="w-full px-4 py-3.5 border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 dark:focus:ring-red-500 focus:border-transparent bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-gray-100 transition-all font-medium"
                 disabled={loading}
               >
                 <option value="low">⬇️ 낮음</option>
@@ -192,11 +201,33 @@ export function NewCardModal({ isOpen, onClose, onSave, boardMembers = [] }: New
                 type="date"
                 value={dueDate}
                 onChange={(e) => setDueDate(e.target.value)}
-                className="w-full px-4 py-3.5 border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-purple-500 focus:border-transparent bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-gray-100 transition-all"
+                className="w-full px-4 py-3.5 border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 dark:focus:ring-red-500 focus:border-transparent bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-gray-100 transition-all"
                 disabled={loading}
               />
             </div>
           </div>
+
+          {/* 라벨 */}
+          {boardId && (
+            <div className="space-y-2">
+              <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 flex items-center gap-2">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                </svg>
+                라벨
+              </label>
+              <div className="bg-gray-50 dark:bg-gray-700 rounded-xl p-4 border-2 border-gray-200 dark:border-gray-600">
+                <LabelSelector
+                  cardId={card.id}
+                  boardId={boardId}
+                  selectedLabels={card.labels || []}
+                  onUpdate={() => {
+                    if (onRefresh) onRefresh();
+                  }}
+                />
+              </div>
+            </div>
+          )}
 
           {/* 담당자 */}
           <div className="space-y-2">
@@ -210,7 +241,7 @@ export function NewCardModal({ isOpen, onClose, onSave, boardMembers = [] }: New
               id="assignee"
               value={assigneeId}
               onChange={(e) => setAssigneeId(e.target.value)}
-              className="w-full px-4 py-3.5 border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-purple-500 focus:border-transparent bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-gray-100 transition-all font-medium"
+              className="w-full px-4 py-3.5 border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 dark:focus:ring-red-500 focus:border-transparent bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-gray-100 transition-all font-medium"
               disabled={loading}
             >
               <option value="">미할당</option>
@@ -223,10 +254,10 @@ export function NewCardModal({ isOpen, onClose, onSave, boardMembers = [] }: New
           </div>
 
           {/* 버튼 */}
-          <div className="flex gap-3 pt-4">
+          <div className="flex gap-3 pt-6 border-t border-gray-200 dark:border-gray-700">
             <button
               type="button"
-              onClick={handleClose}
+              onClick={onClose}
               disabled={loading}
               className="flex-1 px-6 py-3.5 border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition-all disabled:opacity-50 font-semibold transform hover:scale-105 active:scale-95"
             >
@@ -234,8 +265,8 @@ export function NewCardModal({ isOpen, onClose, onSave, boardMembers = [] }: New
             </button>
             <button
               type="submit"
-              disabled={loading || !title.trim()}
-              className="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-3.5 rounded-xl hover:from-blue-700 hover:to-purple-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed font-semibold shadow-lg hover:shadow-xl flex items-center justify-center gap-2 transform hover:scale-105 active:scale-95"
+              disabled={loading || !title || !title.trim()}
+              className="flex-1 bg-gradient-to-r from-orange-600 to-red-600 text-white px-6 py-3.5 rounded-xl hover:from-orange-700 hover:to-red-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed font-semibold shadow-lg hover:shadow-xl flex items-center justify-center gap-2 transform hover:scale-105 active:scale-95"
             >
               {loading ? (
                 <>
@@ -243,14 +274,14 @@ export function NewCardModal({ isOpen, onClose, onSave, boardMembers = [] }: New
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                   </svg>
-                  생성 중...
+                  저장 중...
                 </>
               ) : (
                 <>
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
-                  생성
+                  저장
                 </>
               )}
             </button>
@@ -287,3 +318,4 @@ export function NewCardModal({ isOpen, onClose, onSave, boardMembers = [] }: New
     </div>
   );
 }
+
