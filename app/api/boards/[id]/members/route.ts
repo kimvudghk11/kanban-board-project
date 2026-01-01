@@ -24,10 +24,6 @@ export async function POST(
 
     const { id: boardId } = await params;
     const body = await request.json();
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/042dcbad-baee-4776-a418-4939725e5107',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'app/api/boards/[id]/members/route.ts:26',message:'Member invite request',data:{boardId,email:body.email,role:body.role},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H8'})}).catch(()=>{});
-    // #endregion
-    
     const { email, role } = inviteMemberSchema.parse(body);
 
     // 보드 존재 및 권한 확인
@@ -107,10 +103,6 @@ export async function POST(
         }),
       },
     });
-    
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/042dcbad-baee-4776-a418-4939725e5107',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'app/api/boards/[id]/members/route.ts:106',message:'Member invited successfully',data:{memberId:member.user.id,role:member.role},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H8'})}).catch(()=>{});
-    // #endregion
 
     return NextResponse.json({ member }, { status: 201 });
   } catch (error) {

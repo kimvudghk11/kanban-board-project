@@ -28,10 +28,6 @@ export async function POST(
 
     const { id: cardId } = await params;
     const body = await request.json();
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/042dcbad-baee-4776-a418-4939725e5107',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'app/api/cards/[id]/checklist/route.ts:30',message:'Checklist item create',data:{cardId,content:body.content},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H5'})}).catch(()=>{});
-    // #endregion
-    
     const { content } = createItemSchema.parse(body);
 
     // 카드 접근 권한 확인
@@ -73,10 +69,6 @@ export async function POST(
         order,
       },
     });
-    
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/042dcbad-baee-4776-a418-4939725e5107',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'app/api/cards/[id]/checklist/route.ts:71',message:'Checklist item created',data:{itemId:item.id,order:item.order},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H5'})}).catch(()=>{});
-    // #endregion
 
     return NextResponse.json({ item }, { status: 201 });
   } catch (error) {
@@ -110,10 +102,6 @@ export async function PATCH(
     const { id: cardId } = await params;
     const body = await request.json();
     const { itemId, ...data } = body;
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/042dcbad-baee-4776-a418-4939725e5107',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'app/api/cards/[id]/checklist/route.ts:104',message:'Checklist item update',data:{itemId,isCompleted:data.isCompleted},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H5'})}).catch(()=>{});
-    // #endregion
-    
     const updateData = updateItemSchema.parse(data);
 
     // 카드 접근 권한 확인

@@ -24,10 +24,6 @@ export function DueDateReminder({ boardId, onCardClick, refreshTrigger }: DueDat
   const [upcomingCards, setUpcomingCards] = useState<Card[]>([]);
   const [overdueCards, setOverdueCards] = useState<Card[]>([]);
 
-  useEffect(() => {
-    fetchCards();
-  }, [boardId, refreshTrigger]);
-
   const fetchCards = async () => {
     try {
       const response = await fetch(`/api/boards/${boardId}/due-dates`);
@@ -40,6 +36,10 @@ export function DueDateReminder({ boardId, onCardClick, refreshTrigger }: DueDat
       console.error('Error fetching due dates:', error);
     }
   };
+
+  useEffect(() => {
+    fetchCards();
+  }, [boardId, refreshTrigger]);
 
   const getDaysUntilDue = (dueDate: Date) => {
     const now = new Date();

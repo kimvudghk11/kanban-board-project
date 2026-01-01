@@ -6,7 +6,7 @@ import { Server as HTTPServer } from 'http';
 
 export const dynamic = 'force-dynamic';
 
-let io: SocketIOServer | null = null;
+const io: SocketIOServer | null = null;
 
 export async function GET(req: NextRequest) {
   if (!io) {

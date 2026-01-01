@@ -24,10 +24,6 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/042dcbad-baee-4776-a418-4939725e5107',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'app/api/cards/route.ts:26',message:'Card creation request',data:{title:body.title,columnId:body.columnId,assigneeId:body.assigneeId},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H2'})}).catch(()=>{});
-    // #endregion
-    
     const data = createCardSchema.parse(body);
 
     // 해당 컬럼의 마지막 위치 찾기
@@ -79,10 +75,6 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/042dcbad-baee-4776-a418-4939725e5107',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'app/api/cards/route.ts:78',message:'Card created successfully',data:{cardId:card.id,title:card.title,boardId:card.column.boardId},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H2'})}).catch(()=>{});
-    // #endregion
-    
     // 활동 로그 기록
     const message = getActivityMessage('CARD_CREATED', session.user.name || '사용자', { cardTitle: card.title });
     await createActivity({
@@ -94,10 +86,6 @@ export async function POST(request: NextRequest) {
       userName: session.user.name,
       userEmail: session.user.email || '',
     });
-    
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/042dcbad-baee-4776-a418-4939725e5107',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'app/api/cards/route.ts:89',message:'Activity logged',data:{activityType:'CARD_CREATED'},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H6'})}).catch(()=>{});
-    // #endregion
 
     return NextResponse.json({ card }, { status: 201 });
   } catch (error) {
