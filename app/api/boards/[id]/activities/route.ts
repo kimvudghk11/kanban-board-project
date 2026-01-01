@@ -41,10 +41,6 @@ export async function GET(
       },
       take: 20,
     });
-    
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/042dcbad-baee-4776-a418-4939725e5107',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'app/api/boards/[id]/activities/route.ts:43',message:'Activities fetched',data:{boardId,count:activities.length},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H6'})}).catch(()=>{});
-    // #endregion
 
     return NextResponse.json({ activities });
   } catch (error) {

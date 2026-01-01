@@ -29,12 +29,6 @@ export function ProfileDropdown({ userEmail, userName }: ProfileDropdownProps) {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  useEffect(() => {
-    fetchUnreadCount();
-    const interval = setInterval(fetchUnreadCount, 30000); // 30초마다 확인
-    return () => clearInterval(interval);
-  }, []);
-
   const fetchUnreadCount = async () => {
     try {
       const response = await fetch('/api/notifications');
@@ -46,6 +40,12 @@ export function ProfileDropdown({ userEmail, userName }: ProfileDropdownProps) {
       console.error('Error fetching unread count:', error);
     }
   };
+
+  useEffect(() => {
+    fetchUnreadCount();
+    const interval = setInterval(fetchUnreadCount, 30000); // 30초마다 확인
+    return () => clearInterval(interval);
+  }, []);
 
   const getInitials = () => {
     if (userName) {

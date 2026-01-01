@@ -14,10 +14,6 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
                 password: { label: 'Password', type: 'password' },
             },
             async authorize(credentials) {
-                // #region agent log
-                fetch('http://127.0.0.1:7242/ingest/042dcbad-baee-4776-a418-4939725e5107', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'lib/auth.ts:16', message: 'Login attempt', data: { email: credentials?.email }, timestamp: Date.now(), sessionId: 'debug-session', hypothesisId: 'H1' }) }).catch(() => { });
-                // #endregion
-
                 if (!credentials?.email || !credentials?.password) {
                     throw new Error('이메일과 비밀번호를 입력해주세요.');
                 }
@@ -26,19 +22,11 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
                     where: { email: credentials.email as string },
                 });
 
-                // #region agent log
-                fetch('http://127.0.0.1:7242/ingest/042dcbad-baee-4776-a418-4939725e5107', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'lib/auth.ts:26', message: 'User lookup result', data: { userFound: !!user, userId: user?.id }, timestamp: Date.now(), sessionId: 'debug-session', hypothesisId: 'H1' }) }).catch(() => { });
-                // #endregion
-
                 if (!user) {
                     throw new Error('등록되지 않은 이메일입니다.');
                 }
 
                 const isPasswordValid = await compare(credentials.password as string, user.password);
-
-                // #region agent log
-                fetch('http://127.0.0.1:7242/ingest/042dcbad-baee-4776-a418-4939725e5107', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'lib/auth.ts:35', message: 'Password validation', data: { isValid: isPasswordValid }, timestamp: Date.now(), sessionId: 'debug-session', hypothesisId: 'H1' }) }).catch(() => { });
-                // #endregion
 
                 if (!isPasswordValid) {
                     throw new Error('비밀번호가 일치하지 않습니다.');
