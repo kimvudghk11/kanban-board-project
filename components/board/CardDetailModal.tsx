@@ -9,6 +9,7 @@ import { CommentSection } from './CommentSection';
 import { LabelBadge } from './LabelBadge';
 import { ChecklistSection } from './ChecklistSection';
 import { LabelSelector } from './LabelSelector';
+import { useSocket } from '@/hooks/useSocket';
 
 interface Comment {
   id: string;
@@ -62,6 +63,22 @@ export function CardDetailModal({ card, isOpen, onClose, onEdit, onDelete, onRef
   const [checklistItems, setChecklistItems] = useState<ChecklistItem[]>([]);
   const [deleting, setDeleting] = useState(false);
   const [isAddingComment, setIsAddingComment] = useState(false);
+  const [isCardDeleted, setIsCardDeleted] = useState(false);
+
+  // ✅ Socket.io 연결 - 카드 삭제 이벤트 감지
+  const { socket } = useSocket({
+    boardId: boardId || '',
+    onCardDeleted: (deletedCardId: string) => {
+      if (card && deletedCardId === card.id) {
+        setIsCardDeleted(true);
+        // 3초 후 자동으로 모달 닫기
+        setTimeout(() => {
+          onClose();
+          setIsCardDeleted(false);
+        }, 3000);
+      }
+    },
+  });
 
   // 모달이 열릴 때 초기 데이터 로드
   useEffect(() => {
@@ -69,6 +86,7 @@ export function CardDetailModal({ card, isOpen, onClose, onEdit, onDelete, onRef
       setComments(card.comments || []);
       setChecklistItems(card.checklistItems || []);
       setIsAddingComment(false);
+      setIsCardDeleted(false); // 모달이 열릴 때 삭제 상태 초기화
     }
   }, [isOpen, card?.id]); // 모달 열릴 때 & 카드 변경 시
 
@@ -85,6 +103,35 @@ export function CardDetailModal({ card, isOpen, onClose, onEdit, onDelete, onRef
   }, [isOpen]);
 
   if (!isOpen || !card) return null;
+
+  // ✅ 카드가 삭제된 경우 경고 표시
+  if (isCardDeleted) {
+    return (
+      <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[100] p-4">
+        <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl w-full max-w-md border border-gray-200 dark:border-gray-700 p-8 text-center">
+          <div className="mb-4">
+            <div className="w-16 h-16 mx-auto bg-red-100 dark:bg-red-900/20 rounded-full flex items-center justify-center">
+              <svg className="w-8 h-8 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+            </div>
+          </div>
+          <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-2">
+            카드가 삭제되었습니다
+          </h3>
+          <p className="text-gray-600 dark:text-gray-400 mb-6">
+            다른 사용자가 이 카드를 삭제했습니다. 잠시 후 자동으로 닫힙니다.
+          </p>
+          <button
+            onClick={onClose}
+            className="px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl hover:from-blue-700 hover:to-purple-700 transition-all font-semibold"
+          >
+            닫기
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   const handleAddComment = async (content: string) => {
     setIsAddingComment(true);
