@@ -26,6 +26,37 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const data = createCardSchema.parse(body);
 
+    // ✅ 보안: columnId가 속한 보드의 멤버십 확인
+    const column = await prisma.column.findUnique({
+      where: { id: data.columnId },
+      include: {
+        board: {
+          include: {
+            members: {
+              where: {
+                userId: session.user.id,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    // 권한 검증
+    if (!column) {
+      return NextResponse.json(
+        { error: '존재하지 않는 컬럼입니다.' },
+        { status: 404 }
+      );
+    }
+
+    if (column.board.members.length === 0) {
+      return NextResponse.json(
+        { error: '해당 보드에 접근 권한이 없습니다.' },
+        { status: 403 }
+      );
+    }
+
     // 해당 컬럼의 마지막 위치 찾기
     const lastCard = await prisma.card.findFirst({
       where: { columnId: data.columnId },
@@ -80,7 +111,7 @@ export async function POST(request: NextRequest) {
     await createActivity({
       type: 'CARD_CREATED',
       message,
-      boardId: card.column.boardId,
+      boardId: column.boardId,
       cardId: card.id,
       userId: session.user.id,
       userName: session.user.name,

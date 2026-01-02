@@ -42,6 +42,21 @@ export async function POST(
       return NextResponse.json({ error: '권한이 없습니다.' }, { status: 403 });
     }
 
+    // ✅ 보안: 현재 사용자의 역할 확인
+    const currentMember = board.members[0];
+
+    // ✅ 보안: Admin 권한이 필요한 경우 검증
+    let assignedRole = 'member';
+    if (role === 'admin') {
+      if (currentMember.role !== 'admin') {
+        return NextResponse.json(
+          { error: 'Admin 권한이 필요합니다. 일반 멤버는 Admin으로 초대할 수 없습니다.' },
+          { status: 403 }
+        );
+      }
+      assignedRole = 'admin';
+    }
+
     // 초대할 사용자 찾기
     const userToInvite = await prisma.user.findUnique({
       where: { email },
@@ -71,12 +86,12 @@ export async function POST(
       );
     }
 
-    // 멤버 추가
+    // 멤버 추가 (검증된 role 사용)
     const member = await prisma.boardMember.create({
       data: {
         boardId,
         userId: userToInvite.id,
-        role,
+        role: assignedRole,
       },
       include: {
         user: {

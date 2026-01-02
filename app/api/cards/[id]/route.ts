@@ -138,6 +138,47 @@ export async function PATCH(
       return NextResponse.json({ error: '권한이 없습니다.' }, { status: 403 });
     }
 
+    // ✅ 보안: columnId 변경 시 새로운 컬럼의 권한 확인
+    if (data.columnId && data.columnId !== existingCard.columnId) {
+      const newColumn = await prisma.column.findUnique({
+        where: { id: data.columnId },
+        include: {
+          board: {
+            include: {
+              members: {
+                where: {
+                  userId: session.user.id,
+                },
+              },
+            },
+          },
+        },
+      });
+
+      if (!newColumn) {
+        return NextResponse.json(
+          { error: '존재하지 않는 컬럼입니다.' },
+          { status: 404 }
+        );
+      }
+
+      // ✅ 보안: 같은 보드 내에서만 이동 가능
+      if (newColumn.boardId !== existingCard.column.boardId) {
+        return NextResponse.json(
+          { error: '다른 보드의 컬럼으로 이동할 수 없습니다.' },
+          { status: 403 }
+        );
+      }
+
+      // ✅ 보안: 새로운 컬럼이 속한 보드의 멤버인지 확인
+      if (newColumn.board.members.length === 0) {
+        return NextResponse.json(
+          { error: '해당 컬럼에 접근 권한이 없습니다.' },
+          { status: 403 }
+        );
+      }
+    }
+
     // 업데이트할 데이터 준비 (명시적으로)
     const updateData: {
       title?: string;
