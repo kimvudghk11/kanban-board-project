@@ -6,7 +6,6 @@ import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import { formatDistanceToNow } from 'date-fns';
 import { CommentSection } from './CommentSection';
-import { LabelBadge } from './LabelBadge';
 import { ChecklistSection } from './ChecklistSection';
 import { LabelSelector } from './LabelSelector';
 import { useSocket } from '@/hooks/useSocket';

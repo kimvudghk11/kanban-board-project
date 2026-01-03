@@ -44,13 +44,6 @@ export function KanbanBoard({
 
   // props가 변경될 때마다 로컬 상태 업데이트
   useEffect(() => {
-    console.log('=== Board Updated ===');
-    console.log('Columns:', initialBoard.columns.map(c => ({
-      id: c.id,
-      title: c.title,
-      cardCount: c.cards.length,
-      cards: c.cards.map(card => ({ id: card.id, title: card.title, columnId: card.columnId }))
-    })));
     setBoard(initialBoard);
   }, [initialBoard]);
 
@@ -100,9 +93,6 @@ export function KanbanBoard({
     const card = board.columns
       .flatMap((col) => col.cards)
       .find((c) => String(c.id) === String(active.id));
-    
-    console.log('=== Drag Start ===');
-    console.log('Active Card:', card ? { id: card.id, title: card.title, columnId: card.columnId } : null);
     
     setActiveCard(card || null);
   };
@@ -160,11 +150,6 @@ export function KanbanBoard({
 
   const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event;
-    
-    console.log('=== Drag End ===');
-    console.log('Active ID:', active.id);
-    console.log('Over ID:', over?.id);
-    
     setActiveCard(null);
 
     if (!over) return;
@@ -183,24 +168,13 @@ export function KanbanBoard({
     );
 
     if (!activeColumn || !overColumn) {
-      console.error('Column not found!');
       return;
     }
 
     const card = activeColumn.cards.find((c) => String(c.id) === activeId);
     if (!card) {
-      console.error('Card not found!');
       return;
     }
-
-    console.log('Moving card:', {
-      cardId: card.id,
-      title: card.title,
-      from: activeColumn.title,
-      to: overColumn.title,
-      fromColumnId: activeColumn.id,
-      toColumnId: overColumn.id,
-    });
 
     try {
       // 서버에 업데이트
@@ -208,10 +182,8 @@ export function KanbanBoard({
         columnId: overColumn.id,
         position: 0,
       });
-      
-      console.log('✅ Card update successful!');
     } catch (error) {
-      console.error('❌ Card update failed:', error);
+      console.error('Card update failed:', error);
       // 실패하면 원래 상태로 복구
       setBoard(initialBoard);
     }
