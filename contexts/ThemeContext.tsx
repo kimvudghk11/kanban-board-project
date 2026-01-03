@@ -27,14 +27,10 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     } else {
       document.documentElement.classList.remove('dark');
     }
-
-    console.log('💡 Initial theme loaded:', savedTheme);
   }, []);
 
   const toggleTheme = () => {
     const newTheme = theme === 'light' ? 'dark' : 'light';
-
-    console.log(`🎨 Theme toggling: ${theme} → ${newTheme}`);
 
     // 상태 업데이트
     setTheme(newTheme);
@@ -50,13 +46,6 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
     // 강제 리페인트
     void html.offsetHeight;
-
-    console.log('✅ Theme applied:', newTheme);
-    console.log('✅ HTML classes:', html.className);
-    console.log('✅ Body computed style:', {
-      bg: window.getComputedStyle(document.body).backgroundColor,
-      color: window.getComputedStyle(document.body).color
-    });
   };
 
   // 마운트 전에는 children만 렌더링 (hydration 이슈 방지)

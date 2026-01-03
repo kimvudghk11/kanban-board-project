@@ -103,11 +103,6 @@ export async function PATCH(
 
     const { id } = await params;
     const body = await request.json();
-    
-    console.log('=== PATCH Card Request ===');
-    console.log('Card ID:', id);
-    console.log('Request Body:', JSON.stringify(body, null, 2));
-    
     const data = updateCardSchema.parse(body);
 
     // 기존 카드 확인
@@ -242,8 +237,6 @@ export async function PATCH(
         },
       },
     });
-
-    console.log('Updated Card:', JSON.stringify({ id: card.id, columnId: card.columnId, position: card.position }, null, 2));
 
     // 활동 로그 기록 (컬럼 이동인 경우)
     if (data.columnId && data.columnId !== existingCard.columnId) {
